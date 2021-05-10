@@ -1,16 +1,16 @@
 import React from "react";
 import { Formik, Form } from "formik";
-import {
-  Button,
-  FormControl,
-  FormErrorMessage,
-  FormLabel,
-  Input,
-} from "@chakra-ui/react";
+import { Button } from "@chakra-ui/react";
+import { useRouter } from "next/router";
 import Wrapper from "../components/Wrapper";
+import InputField from "../components/InputField";
+import { useRegisterMutation } from "./../generated/graphql";
+import { toErrorMap } from "../utils/toErrorMap";
 interface registerProps {}
 
 const Register: React.FC<registerProps> = ({}) => {
+  const router = useRouter();
+  const [result, registerMutation] = useRegisterMutation();
   const validateName = () => {
     console.log("Validate Name Called....");
   };
@@ -18,32 +18,34 @@ const Register: React.FC<registerProps> = ({}) => {
     <Wrapper variant="small">
       <Formik
         initialValues={{ username: "", password: "" }}
-        onSubmit={(values) => {
+        onSubmit={async (values, { setErrors }) => {
           console.log("submit", values);
-          // setTimeout(() => {
-          //   alert(JSON.stringify(values, null, 2));
-          //   actions.setSubmitting(false);
-          // }, 1000);
+          const response = await registerMutation(values);
+          if (response.data?.register.errors) {
+            setErrors(toErrorMap(response.data.register.errors));
+          } else if (response.data?.register.user) {
+            //worked
+            router.push("/");
+          }
         }}
       >
-        {({ values, handleChange }) => (
+        {({ values, handleChange, isSubmitting }) => (
           <Form>
-            {({ field, form }) => (
-              <FormControl isInvalid={form.errors.name && form.touched.name}>
-                <FormLabel htmlFor="username">Username</FormLabel>
-                <Input
-                  value={values.username}
-                  id="username"
-                  onChange={handleChange}
-                  placeholder="Username"
-                />
-                <FormErrorMessage>{form.errors.name}</FormErrorMessage>
-              </FormControl>
-            )}
+            <InputField
+              name="username"
+              placeholder="username"
+              label="Username"
+            />
+            <InputField
+              name="password"
+              placeholder="password"
+              label="Password"
+              type="password"
+            />
             <Button
               mt={4}
               colorScheme="teal"
-              isLoading={props.isSubmitting}
+              isLoading={isSubmitting}
               type="submit"
             >
               Submit
