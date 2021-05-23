@@ -1,5 +1,3 @@
-const Index = () => (
-  <div>AoA</div>
-)
+const Index = () => <div>Welcome to Home Screen</div>;
 
-export default Index
+export default Index;
